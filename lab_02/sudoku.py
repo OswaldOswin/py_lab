@@ -1,25 +1,9 @@
 import random
 
 
-def read_sudoku(filename):
-    """ Прочитать Судоку из указанного файла """
-    digits = [c for c in open(filename).read() if c in '123456789.']
-    grid = group(digits, 9)
-    return grid
-
-
-def display(values):
-    """Вывод Судоку """
-    width = 2
-    line = '+'.join(['-' * (width * 3)] * 3)
-    for row in range(9):
-        print(''.join(values[row][col].center(width) + ('|' if str(col) in '25' else '') for col in range(9)))
-        if str(row) in '25':
-            print(line)
-    print()
-
-
 def group(values: list, n: int) -> list:
+
+
     """
     Сгруппировать значения values в список, состоящий из списков по n элементов
 
@@ -31,7 +15,32 @@ def group(values: list, n: int) -> list:
     return [values[i:i + n] for i in range(0, len(values), n)]
 
 
+def read_sudoku(filename):
+
+
+    """ Прочитать Судоку из указанного файла """
+    digits = [c for c in open(filename).read() if c in '123456789.']
+    grid = group(digits, 9)
+    return grid
+
+
+def display(values):
+
+
+    """Вывод Судоку """
+    width = 2
+    line = '+'.join(['-' * (width * 3)] * 3)
+    for row in range(9):
+        print(''.join(values[row][col].center(width) + ('|' if str(col) in '25' else '') for col in range(9)))
+        if str(row) in '25':
+            print(line)
+    print()
+
+
+
 def get_row(values: list, pos: tuple) -> list:
+
+
     """ Возвращает все значения для номера строки, указанной в pos
 
     >>> get_row([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']], (0, 0))
@@ -45,6 +54,8 @@ def get_row(values: list, pos: tuple) -> list:
 
 
 def get_col(values: list, pos: tuple) -> list:
+
+
     """ Возвращает все значения для номера столбца, указанного в pos
 
     >>> get_col([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']], (0, 0))
@@ -58,6 +69,8 @@ def get_col(values: list, pos: tuple) -> list:
 
 
 def get_block(values: list, pos: tuple) -> list:
+
+
     """ Возвращает все значения из квадрата, в который попадает позиция pos
 
     >>> grid = read_sudoku('puzzle1.txt')
@@ -77,6 +90,8 @@ def get_block(values: list, pos: tuple) -> list:
     return block
 
 def find_empty_positions(grid: list) -> tuple:
+
+
     """ Найти первую свободную позицию в пазле
 
     >>> find_empty_positions([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']])
@@ -87,7 +102,7 @@ def find_empty_positions(grid: list) -> tuple:
     (2, 0)
     """
     for row in range(len(grid)):
-        for col in range(len(grid)):
+        for col in range(len(grid[row])):
             if grid[row][col] == '.':
                 return (row, col)
 
@@ -95,6 +110,8 @@ def find_empty_positions(grid: list) -> tuple:
 
 
 def find_possible_values(grid: list, pos: tuple) -> set:
+
+
     """ Вернуть множество возможных значения для указанной позиции
 
     >>> grid = read_sudoku('puzzle1.txt')
@@ -113,6 +130,8 @@ def find_possible_values(grid: list, pos: tuple) -> set:
     return e
 
 def solve(grid: list) -> list:
+
+
     """ Решение пазла, заданного в grid """
     """ Как решать Судоку?
         1. Найти свободную позицию
@@ -135,11 +154,13 @@ def solve(grid: list) -> list:
         if solution:
             return solution
     grid[row][col] = '.'
-    return None
+    return [0]
 
 
 
-def check_solution(solution):
+def check_solution(solution: list) -> bool:
+
+
     """ Если решение solution верно, то вернуть True, в противном случае False """
     # TODO: Add doctests with bad puzzles
     for row in range(len(solution)):
@@ -160,7 +181,9 @@ def check_solution(solution):
 
 
 
-def generate_sudoku(N):
+def generate_sudoku(N: int) -> list:
+
+
     """ Генерация судоку заполненного на N элементов
 
     >>> grid = generate_sudoku(40)
@@ -182,7 +205,15 @@ def generate_sudoku(N):
     >>> check_solution(solution)
     True
     """
-    pass
+    grid = solve([['.'] * 9 for _ in range(9)])
+    N = 81 - min(81, N)
+    while N > 0:
+        row = random.randint(0, 8)
+        col = random.randint(0, 8)
+        if grid[row][col] != '.':
+            grid[row][col] = '.'
+            N -= 1
+    return grid
 
 
 if __name__ == '__main__':
