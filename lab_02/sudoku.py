@@ -154,7 +154,7 @@ def solve(grid: list) -> list:
         if solution:
             return solution
     grid[row][col] = '.'
-    return [0]
+    return []
 
 
 
@@ -169,15 +169,16 @@ def check_solution(solution: list) -> bool:
             return False
 
     for col in range (len(solution)):
-        values = set(get_row(solution (0, col)))
+        values = set(get_col(solution, (0, col)))
         if values != set('123456789'):
             return False
 
     for row in (0, 3, 6):
         for col in (0, 3, 6):
-            values = set(get_block(solution, (0, col)))
+            values = set(get_block(solution, (row, col)))
             if values != set('123456789'):
                 return False
+    return True
 
 
 
