@@ -15,7 +15,7 @@ def group(values: list, n: int) -> list:
     return [values[i:i + n] for i in range(0, len(values), n)]
 
 
-def read_sudoku(filename):
+def read_sudoku(filename: str) -> list:
 
 
     """ Прочитать Судоку из указанного файла """
@@ -24,7 +24,7 @@ def read_sudoku(filename):
     return grid
 
 
-def display(values):
+def display(values: list):
 
 
     """Вывод Судоку """
