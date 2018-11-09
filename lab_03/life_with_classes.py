@@ -63,9 +63,9 @@ class CellList:
         self.ncols = ncols
         self.grid = []
         if randomize:
-            for i in range(nrows):
-                for j in range(ncols):
-                    self.grid.append(Cell(i, j, random.randint(0, 1))
+            for j in range(ncols):
+                for i in range(nrows):
+                    self.grid.append(Cell(i, j, random.randint(0, 1)))
         else:
             for i in range(nrows):
                 for j in range(ncols):
@@ -73,11 +73,11 @@ class CellList:
 
     def get_neighbours(self, cell):
         neighbours = []
-        x, y = cell
+        x, y = cell.row, cell.col
         for i in  range(x-1, x+2):
             for j in range(y-1, y+2):
-                if i in range(0, self.cell_height) and j in range(0, self.cell_width) and (i != x or j != y):
-                    neighbours.append(self.clist[i][j])
+                if i in range(0, self.nrows) and j in range(0, self.ncols) and (i != x or j != y):
+                    neighbours.append(self.grid[i][j])
         return neighbours
 
     def update(self):
@@ -94,15 +94,35 @@ class CellList:
                     new_grid[cell.row][cell.col].state = 0
         return self
 
+    @classmethod
+    def from_file(cls, filename) -> list:
+        grid = []
+        grid = open(filename).read()
+
+
+
     def __iter__(self):
-        pass
+        self.i, self.j = 0, 0
+        return self
 
     def __next__(self):
-        pass
+        if self.i < self.nrows:
+            cell = self.grid[self.i][self.j]
+            self.j += 1
+            if self.j == self.ncols:
+                self.i += 1
+                self.j = 0
+            return cell
+        else:
+            raise StopIteration
 
-    def __str__(self):
-        pass
-
-    @classmethod
-    def from_file(cls, filename):
-        pass
+    def __str__(self) -> str:
+        str = ''
+        for i in range(self.nrows):
+            for j in range(self.ncols):
+                if seld.grid[i][j].state == True:
+                    str += '1'
+                else:
+                    str += '0'
+            str += '\n'
+        return str

@@ -69,7 +69,7 @@ class TestCellList(unittest.TestCase):
 
     def test_get_neighbours_for_upper_left_corner(self):
         clist = CellList.from_file('grid.txt')
-        neighbours = clist.get_neighbours(Cell(0,0))
+        neighbours = self.get_neighbours(Cell(0,0))
         self.assertEquals(3, len(neighbours))
         self.assertEquals(2, sum(c.is_alive() for c in neighbours))
 
