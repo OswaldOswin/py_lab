@@ -48,25 +48,50 @@ if __name__ == '__main__':
 class Cell:
 
     def __init__(self, row, col, state=False):
-        pass
+        self.state = state
+        self.row = row
+        self.col = col
 
     def is_alive(self):
-        pass
+        return self.state
 
 
 class CellList:
 
     def __init__(self, nrows, ncols, randomize=False):
-        pass
+        self.nrows = nrows
+        self.ncols = ncols
+        self.grid = []
+        if randomize:
+            for i in range(nrows):
+                for j in range(ncols):
+                    self.grid.append(Cell(i, j, random.randint(0, 1))
+        else:
+            for i in range(nrows):
+                for j in range(ncols):
+                    self.grid.append(Cell(i, j, 0))
 
     def get_neighbours(self, cell):
         neighbours = []
-        # PUT YOUR CODE HERE
+        x, y = cell
+        for i in  range(x-1, x+2):
+            for j in range(y-1, y+2):
+                if i in range(0, self.cell_height) and j in range(0, self.cell_width) and (i != x or j != y):
+                    neighbours.append(self.clist[i][j])
         return neighbours
 
     def update(self):
-        new_clist = deepcopy(self)
-        # PUT YOUR CODE HERE
+        new_grid = copy.deepcopy(self.grid)
+        for cell in self:
+            neighbours = self.get_neighbours(cell)
+            neighbours = sum(i.is_alive() for i in neighbours)
+            if cell.is_alive():
+                if neighbours == 2:
+                    pass
+                elif neighbours == 3:
+                    new_grid[cell.row][cell.col].state = 1
+                else:
+                    new_grid[cell.row][cell.col].state = 0
         return self
 
     def __iter__(self):
