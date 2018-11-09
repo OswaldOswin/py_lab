@@ -5,6 +5,8 @@ import copy
 
 
 class GameOfLife:
+
+
     def __init__(self, width=640, height=480, cell_size=10, speed=10):
         self.width = width
         self.height = height
@@ -53,6 +55,7 @@ class GameOfLife:
                     self.clist[i][j] = 0
         return self.clist
 
+
     def draw_cell_list(self, clist: list):
         # отображение списка клеток
         for i in range(self.cell_height):
@@ -63,6 +66,7 @@ class GameOfLife:
                 rect = Rect(i, j, sefl.cell_size, self.cell_size)
                 pygame.draw.rect(self.screen, color_cell, rect)
 
+
     def get_neighbours(self, cell: tuple) -> list:
         #список соседей для указанной ячейки
         neighbours = []
@@ -72,6 +76,7 @@ class GameOfLife:
                 if i in range(0, self.cell_height) and j in range(0, self.cell_width) and (i != x or j != y):
                     neighbours.append(self.clist[i][j])
         return neighbours
+
 
     def update_cell_list(self, cell_list: list) -> list:
         #один шаг игры

@@ -5,6 +5,8 @@ from copy import deepcopy
 
 
 class GameOfLife:
+
+    
     def __init__(self, width=640, height=480, cell_size=10, speed=10):
         self.width = width
         self.height = height
@@ -47,6 +49,7 @@ if __name__ == '__main__':
 
 class Cell:
 
+
     def __init__(self, row, col, state=False):
         self.state = state
         self.row = row
@@ -57,6 +60,7 @@ class Cell:
 
 
 class CellList:
+
 
     def __init__(self, nrows, ncols, randomize=False):
         self.nrows = nrows
@@ -71,6 +75,7 @@ class CellList:
                 for j in range(ncols):
                     self.grid.append(Cell(i, j, 0))
 
+
     def get_neighbours(self, cell):
         neighbours = []
         x, y = cell.row, cell.col
@@ -79,6 +84,7 @@ class CellList:
                 if i in range(0, self.nrows) and j in range(0, self.ncols) and (i != x or j != y):
                     neighbours.append(self.grid[i][j])
         return neighbours
+
 
     def update(self):
         new_grid = copy.deepcopy(self.grid)
@@ -94,16 +100,34 @@ class CellList:
                     new_grid[cell.row][cell.col].state = 0
         return self
 
+
     @classmethod
     def from_file(cls, filename) -> list:
         grid = []
-        grid = open(filename).read()
+        file = open(filename).read()
+        row = 0
+        col = 0
+        for line in file:
+            row = []
+            for item in line:
+                if item == '0':
+                    row.append(Cell(row, col, False))
+                else:
+                    row.append(Cell(row, col, True))
+                ncol = col
+                col += 1
+            col = 0
+            i += 1
+        grid.append(row)
+        nrow = i
 
+        return CellList(nrow, ncol, openFile=True, cell_list=grid)
 
 
     def __iter__(self):
         self.i, self.j = 0, 0
         return self
+
 
     def __next__(self):
         if self.i < self.nrows:
@@ -115,6 +139,7 @@ class CellList:
             return cell
         else:
             raise StopIteration
+
 
     def __str__(self) -> str:
         str = ''
