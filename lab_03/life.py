@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 import random
+import copy
 
 
 class GameOfLife:
@@ -26,7 +27,7 @@ class GameOfLife:
         pygame.init()
         clock = pygame.time.Clock()
         pygame.display.set_caption('Game of Life')
-        self.screen.fill(pygame.Color('red'))
+        self.screen.fill(pygame.Color('white'))
         running = True
         while running:
             for event in pygame.event.get():
@@ -38,45 +39,55 @@ class GameOfLife:
         pygame.quit()
 
 
-    def cell_list(self, randomize=True):
-        """ Создание списка клеток.
-
-        :param randomize: Если True, то создается список клеток, где
-        каждая клетка равновероятно может быть живой (1) или мертвой (0).
-        :return: Список клеток, представленный в виде матрицы
-        """
+    def cell_list(self, randomize=True) -> list:
+        # создание списка клеток
         self.clist = []
-        # PUT YOUR CODE HERE
+        self.clist = [[0] * self.cell_width for i in range(self.cell_height)]
+        if randomize:
+            for i in range(self.cell_height):
+                for j in range(self.cell_width):
+                    self.clist[i][j] = random.randint(0,1)
+        else:
+            for i in range(self.cell_height):
+                for j in range(self.cell_width):
+                    self.clist[i][j] = 0
         return self.clist
 
-    def draw_cell_list(self, clist):
-        """ Отображение списка клеток
+    def draw_cell_list(self, clist: list):
+        # отображение списка клеток
+        for i in range(self.cell_height):
+            for j in range(self.cell_width):
+                color_cell = pygame.Color('white')
+                if self.clist[i][j] == 1:
+                    color_cell = pygame.Color('pink')
+                rect = Rect(i, j, sefl.cell_size, self.cell_size)
+                pygame.draw.rect(self.screen, color_cell, rect)
 
-        :param rects: Список клеток для отрисовки, представленный в виде матрицы
-        """
-        pass
-
-    def get_neighbours(self, cell):
-        """ Вернуть список соседей для указанной ячейки
-
-        :param cell: Позиция ячейки в сетке, задается кортежем вида (row, col)
-        :return: Одномерный список ячеек, смежных к ячейке cell
-        """
+    def get_neighbours(self, cell: tuple) -> list:
+        #список соседей для указанной ячейки
         neighbours = []
-        # PUT YOUR CODE HERE
+        x, y = cell
+        for i in  range(x-1, x+2):
+            for j in range(y-1, y+2):
+                if i in range(0, self.cell_height) and j in range(0, self.cell_width) and (i != x or j != y):
+                    neighbours.append(self.clist[i][j])
         return neighbours
 
-    def update_cell_list(self, cell_list):
-        """ Выполнить один шаг игры.
-
-        Обновление всех ячеек происходит одновременно. Функция возвращает
-        новое игровое поле.
-
-        :param cell_list: Игровое поле, представленное в виде матрицы
-        :return: Обновленное игровое поле
-        """
-        new_clist = []
-        # PUT YOUR CODE HERE
+    def update_cell_list(self, cell_list: list) -> list:
+        #один шаг игры
+        new_clist = copy.deepcopy(self.clist)
+        for i in range(self.cell_height):
+            for j in range(self.cell_width):
+                if sum(self.get_neighbours((i,j))) == 2:
+                    if new_clist[i][j] == 1:
+                        new_clist[i][j] = 1
+                    else:
+                        new_clist[i][j] = 0
+                elif  sum(self.get_neighbours((i,j))) == 3:
+                        new_clist[i][j] = 1
+                else:
+                    new_clist[i][j] = 0
+        self.clist = new_clist
         return self.clist
 
 
