@@ -6,7 +6,7 @@ from copy import deepcopy
 
 class GameOfLife:
 
-    
+
     def __init__(self, width=640, height=480, cell_size=10, speed=10):
         self.width = width
         self.height = height
@@ -117,9 +117,9 @@ class CellList:
                 ncol = col
                 col += 1
             col = 0
-            i += 1
+            row += 1
         grid.append(row)
-        nrow = i
+        nrow = row
 
         return CellList(nrow, ncol, openFile=True, cell_list=grid)
 
