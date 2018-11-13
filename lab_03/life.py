@@ -28,6 +28,7 @@ class GameOfLife:
     def run(self):
         pygame.init()
         clock = pygame.time.Clock()
+        self.clist = self.cell_list()
         pygame.display.set_caption('Game of Life')
         self.screen.fill(pygame.Color('white'))
         running = True
@@ -36,6 +37,8 @@ class GameOfLife:
                 if event.type == QUIT:
                     running = False
             self.draw_grid()
+            self.draw_cell_list(self.clist)
+            self.update_cell_list(self.clist)
             pygame.display.flip()
             clock.tick(self.speed)
         pygame.quit()
@@ -49,10 +52,6 @@ class GameOfLife:
             for i in range(self.cell_height):
                 for j in range(self.cell_width):
                     self.clist[i][j] = random.randint(0,1)
-        else:
-            for i in range(self.cell_height):
-                for j in range(self.cell_width):
-                    self.clist[i][j] = 0
         return self.clist
 
 
@@ -60,10 +59,11 @@ class GameOfLife:
         # отображение списка клеток
         for i in range(self.cell_height):
             for j in range(self.cell_width):
-                color_cell = pygame.Color('white')
                 if self.clist[i][j] == 1:
                     color_cell = pygame.Color('pink')
-                rect = Rect(i, j, sefl.cell_size, self.cell_size)
+                else:
+                    color_cell = pygame.Color('white')
+                rect = Rect(i, j, self.cell_size, self.cell_size)
                 pygame.draw.rect(self.screen, color_cell, rect)
 
 
