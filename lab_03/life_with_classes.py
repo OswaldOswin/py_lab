@@ -2,10 +2,10 @@ import pygame
 from pygame.locals import *
 import random
 from copy import deepcopy
+from typing import List, Tuple
 
 
 class GameOfLife:
-
 
     def __init__(self, width=640, height=480, cell_size=10, speed=10):
         self.width = width
@@ -17,13 +17,11 @@ class GameOfLife:
         self.cell_height = self.height // self.cell_size
         self.speed = speed
 
-
     def draw_grid(self):
         for x in range(0, self.width, self.cell_size):
             pygame.draw.line(self.screen, pygame.Color('black'), (x, 0), (x, self.height))
         for y in range(0, self.height, self.cell_size):
             pygame.draw.line(self.screen, pygame.Color('black'), (0, y), (self.width, y))
-
 
     def run(self):
         pygame.init()
@@ -40,29 +38,25 @@ class GameOfLife:
             clock.tick(self.speed)
         pygame.quit()
 
-
 if __name__ == '__main__':
     game = GameOfLife(320, 240, 20)
     game.run()
 
 
-
 class Cell:
 
-
-    def __init__(self, row, col, state=False):
+    def __init__(self, row: int, col: int, state=False):
         self.state = state
         self.row = row
         self.col = col
 
-    def is_alive(self):
+    def is_alive(self) -> bool:
         return self.state
 
 
 class CellList:
 
-
-    def __init__(self, nrows, ncols, randomize=False):
+    def __init__(self, nrows:int, ncols:int, randomize=False):
         self.nrows = nrows
         self.ncols = ncols
         self.grid = []
@@ -75,16 +69,14 @@ class CellList:
                 for j in range(ncols):
                     self.grid.append(Cell(i, j, 0))
 
-
-    def get_neighbours(self, cell):
+    def get_neighbours(self, cell: Cell) -> List[Cell]:
         neighbours = []
         x, y = cell.row, cell.col
-        for i in  range(x-1, x+2):
-            for j in range(y-1, y+2):
+        for i in range(x - 1, x + 2):
+            for j in range(y - 1, y + 2):
                 if i in range(0, self.nrows) and j in range(0, self.ncols) and (i != x or j != y):
                     neighbours.append(self.grid[i][j])
         return neighbours
-
 
     def update(self):
         new_grid = copy.deepcopy(self.grid)
@@ -100,9 +92,8 @@ class CellList:
                     new_grid[cell.row][cell.col].state = 0
         return self
 
-
     @classmethod
-    def from_file(cls, filename) -> list:
+    def from_file(cls, filename: str) -> List:
         grid = []
         file = open(filename).read()
         row = 0
@@ -123,11 +114,9 @@ class CellList:
 
         return CellList(nrow, ncol, openFile=True, cell_list=grid)
 
-
     def __iter__(self):
         self.i, self.j = 0, 0
         return self
-
 
     def __next__(self):
         if self.i < self.nrows:
@@ -140,12 +129,11 @@ class CellList:
         else:
             raise StopIteration
 
-
     def __str__(self) -> str:
         str = ''
         for i in range(self.nrows):
             for j in range(self.ncols):
-                if seld.grid[i][j].state == True:
+                if seld.grid[i][j].state is True:
                     str += '1'
                 else:
                     str += '0'
