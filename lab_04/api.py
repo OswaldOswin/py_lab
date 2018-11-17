@@ -1,98 +1,127 @@
 import requests
-from datetime import datetime
+import datetime
 import plotly
-from datetime import datetime, timedelta
+from pprint import pprint as pp
 
 
-config = {
-    'VK_ACCESS_TOKEN': 'Tокен доступа для ВК',
-    'PLOTLY_USERNAME': 'Имя пользователя Plot.ly',
-    'PLOTLY_API_KEY': 'Ключ доступа Plot.ly'
-}
+
+user_id = int(input('Enter id: '))
+
+config = open('config.py', 'r')
+print(config)
 
 
-'''def get(url, params={}, timeout=5, max_retries=5, backoff_factor=0.3):
-    """ Выполнить GET-запрос
+def get(url, params={}, timeout=5, max_retries=5, backoff_factor=0.3):
 
-    :param url: адрес, на который необходимо выполнить запрос
-    :param params: параметры запроса
-    :param timeout: максимальное время ожидания ответа от сервера
-    :param max_retries: максимальное число повторных запросов
-    :param backoff_factor: коэффициент экспоненциального нарастания задержки
-    """
-    '''
+    for retry in range(max_retries):
+        try:
+            response = requests.get(url, params=params, timeout=timeout)
+            return response
+        except requests.exceptions.RequestException:
+            if retry == max_retries - 1:
+                raise
+            backoff_value = backoff_factor * (2 ** retry)
+            time.sleep(backoff_value)
 
 
-def get_friends(user_id: int, fields: str):
-    """ Вернуть данных о друзьях пользователя
+def get_friends(user_id: int, fields: str) -> dict:
 
-    :param user_id: идентификатор пользователя, список друзей которого нужно получить
-    :param fields: список полей, которые нужно получить для каждого пользователя
-    """
     assert isinstance(user_id, int), "user_id must be positive integer"
     assert isinstance(fields, str), "fields must be string"
     assert user_id > 0, "user_id must be positive integer"
 
-    domain = "https://api.vk.com/method"
-    access_token = 'ebff99b08bbfe1123bc27d71e7eb39e692586f3465641f777ef3636b3fa4517747fc98828cd9e49db37e0'
-
     query_params = {
-    'domain': domain,
-    'access_token': access_token,
+    'domain': config['DOMAIN'],
+    'access_token': config['VK_ACCESS_TOKEN'],
+    'v': config['V'],
     'user_id': user_id,
     'fields': fields
     }
 
-    query = "{domain}/friends.get?access_token={access_token}&user_id={user_id}&fields={fields}&v=5.53".format(**query_params)
+    query = "{domain}/friends.get?access_token={access_token}&user_id={user_id}&fields={fields}&v={v}".format(**query_params)
     response = requests.get(query)
-    return response
+    return response.json()
 
 
-def age_predict(user_id):
-    """ Наивный прогноз возраста по возрасту друзей
+def age_predict(user_id: str) -> int:
 
-    Возраст считается как медиана среди возраста всех друзей пользователя
-
-    :param user_id: идентификатор пользователя
-    """
     assert isinstance(user_id, int), "user_id must be positive integer"
     assert user_id > 0, "user_id must be positive integer"
 
-    num = get_friends(141948816, 'bdate').json()['response']['count']
-    a = []
+    #получаем список дат рождения
+    dates = []
+    ages = []
+    data = get_friends(user_id, 'bdate')
+    friends = data['response']['items']
+    num = data['response']['count']
     for i in range(num):
-        a.append(get_friends(141948816, 'bdate').json()['response']['items'][i]['bdate'])
-    return a
-num = get_friends(141948816, 'bdate').json()['response']['count']
-a = []
-for i in range(num):
-    a.append(get_friends(141948816, 'bdate').json()['response']['items'][i]['bdate'])
-print(a)
+        if friends[i].get('bdate'):
+            dates.append(friends[i]['bdate'])
+    #учитываем только даты с годом
+    new = []
+    for elem in dates:
+        if len(elem) in range(8, 11):
+            new.append(elem)
+        dates = new
+    #считаем возраст друзей
+    for elem in dates:
+        b = []
+        a = elem
+        b = a.split('.')
+        for i in range(3):
+            b[i] = int(b[i])
+        data = datetime.date(b[2], b[1], b[0])
+        age = (datetime.date.today() - data) // 365
+        ages.append(age.days)
+    #считаем медиану
+    if ages:
+        ages.sort()
+        if len(ages) % 2 == 1:
+            return ages[len(ages) // 2]
+        else:
+            return int((ages[len(ages) // 2 - 1] + ages[len(ages) // 2]) / 2)
+    else:
+        return 0
+print(age_predict(user_id))
 
 
+def messages_get_history(user_id: int, offset=0, count=20):
 
-def messages_get_history(user_id, offset=0, count=20):
-    """ Получить историю переписки с указанным пользователем
-
-    :param user_id: идентификатор пользователя, с которым нужно получить историю переписки
-    :param offset: смещение в истории переписки
-    :param count: число сообщений, которое нужно получить
-    """
     assert isinstance(user_id, int), "user_id must be positive integer"
     assert user_id > 0, "user_id must be positive integer"
     assert isinstance(offset, int), "offset must be positive integer"
     assert offset >= 0, "user_id must be positive integer"
     assert count >= 0, "user_id must be positive integer"
-    # PUT YOUR CODE HERE
-    pass
+
+    query_params = {
+    'domain': config['DOMAIN'],
+    'access_token': config['VK_ACCESS_TOKEN'],
+    'v': config['V'],
+    'user_id': user_id,
+    'offset': offset,
+    'count': count
+    }
+
+    query = "{domain}/messages.getHistory?access_token={access_token}&user_id={user_id}&offset={offset}&v={v}".format(**query_params)
+    response = requests.get(query)
+    messages = response.json()
+    return messages
+
 
 def count_dates_from_messages(messages):
     """ Получить список дат и их частот
 
     :param messages: список сообщений
     """
-    pass
-    # PUT YOUR CODE HERE
+    messages = messages_get_history(user_id)
+    items = messages['response']['items']
+    freq_list = []
+    for item in items:
+        freq_list.append(item['date'])
+    for i in range(len(freq_list)):
+        freq_list[i] = datetime.datetime.fromtimestamp(freq_list[i]).strftime('%d.%m.%Y')
+    return freq_list
+print(count_dates_from_messages(messages_get_history(user_id)))
 
 
 def plotly_messages_freq(freq_list):
@@ -100,12 +129,11 @@ def plotly_messages_freq(freq_list):
 
     :param freq_list: список дат и их частот
     """
-    pass
-    # PUT YOUR CODE HERE
+    data = [go.Scatter(x=freq_list[0], y=freq_list[1])]
+    plotly.plotly.plot(data)
 
 
 def get_network(users_ids, as_edgelist=True):
-    # PUT YOUR CODE HERE
     pass
 
 def plot_graph(graph):
