@@ -1,12 +1,18 @@
 import requests
 import datetime
 import plotly
+import plotly.plotly as py
+import plotly.graph_objs as go
 from pprint import pprint as pp
 from config import config
+from collections import Counter
+from igraph import Graph, plot
+import numpy as np
+
 
 user_id = int(input('Enter id: '))
 
-plotly.tools.set_credentials_file(username=config['plotly_username'], api_key=['plotly_api_key'])
+plotly.tools.set_credentials_file(username=config.get('plotly_username'), api_key=config.get('plotly_api_key'))
 
 
 def get(url, params={}, timeout=5, max_retries=5, backoff_factor=0.3):
@@ -31,7 +37,7 @@ def get_friends(user_id: int, fields: str) -> dict:
     query_params = {
     'domain': config.get('domain'),
     'access_token': config.get('access_token'),
-    'v': config.get['v'],
+    'v': config.get('v'),
     'user_id': user_id,
     'fields': fields
     }
@@ -80,10 +86,10 @@ def age_predict(user_id: str) -> int:
             return int((ages[len(ages) // 2 - 1] + ages[len(ages) // 2]) / 2)
     else:
         return 0
-print(age_predict(user_id))
+print(age_predict(116913967))
 
 
-def messages_get_history(user_id: int, offset=0, count=20):
+def messages_get_history(user_id: int, offset=0, count=20) -> dict:
 
     assert isinstance(user_id, int), "user_id must be positive integer"
     assert user_id > 0, "user_id must be positive integer"
@@ -106,33 +112,54 @@ def messages_get_history(user_id: int, offset=0, count=20):
     return messages
 
 
-def count_dates_from_messages(messages):
-    """ Получить список дат и их частот
-
-    :param messages: список сообщений
-    """
+def count_dates_from_messages(messages: dict) -> list:
     messages = messages_get_history(user_id)
     items = messages['response']['items']
-    freq_list = []
+    dates = []
     for item in items:
-        freq_list.append(item['date'])
-    for i in range(len(freq_list)):
-        freq_list[i] = datetime.datetime.fromtimestamp(freq_list[i]).strftime('%d.%m.%Y')
-    return freq_list
-print(count_dates_from_messages(messages_get_history(user_id)))
+        dates.append(item['date'])
+    for i in range(len(dates)):
+        dates[i] = datetime.datetime.fromtimestamp(dates[i]).strftime('%Y-%m-%d')
+    if dates:
+        return dates
+    else:
+        return [0]
 
+def plotly_messages_freq(dates):
+    a = Counter(dates)
+    x = list(a.keys())
+    y = list(a.values())
+    data = [go.Scatter(x=x,y=y)]
+    py.iplot(data)
+#plotly_messages_freq(count_dates_from_messages(messages_get_history(user_id)))
 
-def plotly_messages_freq(freq_list):
-    """ Построение графика с помощью Plot.ly
+def get_network(user_id=config.get('my_id'), as_edgelist=True):
+    id_list = get_friends(user_id)['response']['items']
+    edges = [(0,2),(0,1),(0,3),
+    (1,0),(1,2),(1,3),
+    (2,0),(2,1),(2,3),(2,4),
+    (3,0),(3,1),(3,2),
+    (4,5),(4,6),
+    (5,4),(5,6),
+    (6,4),(6,5)]
 
-    :param freq_list: список дат и их частот
-    """
-    data = [go.Scatter(x=freq_list[0], y=freq_list[1])]
-    plotly.plotly.plot(data)
+    g = Graph(vertex_attrs={"label":vertices},
+    edges=edges, directed=False)
 
+    N = len(vertices)
+    visual_style = {}
+    visual_style["layout"] = g.layout_fruchterman_reingold(
+    maxiter=1000,
+    area=N**3,
+    repulserad=N**3)
 
-def get_network(users_ids, as_edgelist=True):
-    pass
+    plot(g, **visual_style)
+
+    g.simplify(multiple=True, loops=True)
+
+    pal = igraph.drawing.colors.ClusterColoringPalette(len(clusters))
+    g.vs['color'] = pal.get_many(clusters.membership)
+
 
 def plot_graph(graph):
     # PUT YOUR CODE HERE
