@@ -2,13 +2,11 @@ import requests
 import datetime
 import plotly
 from pprint import pprint as pp
-
-
+from config import config
 
 user_id = int(input('Enter id: '))
 
-config = open('config.py', 'r')
-print(config)
+plotly.tools.set_credentials_file(username=config['plotly_username'], api_key=['plotly_api_key'])
 
 
 def get(url, params={}, timeout=5, max_retries=5, backoff_factor=0.3):
@@ -31,9 +29,9 @@ def get_friends(user_id: int, fields: str) -> dict:
     assert user_id > 0, "user_id must be positive integer"
 
     query_params = {
-    'domain': config['DOMAIN'],
-    'access_token': config['VK_ACCESS_TOKEN'],
-    'v': config['V'],
+    'domain': config.get('domain'),
+    'access_token': config.get('access_token'),
+    'v': config.get['v'],
     'user_id': user_id,
     'fields': fields
     }
@@ -94,9 +92,9 @@ def messages_get_history(user_id: int, offset=0, count=20):
     assert count >= 0, "user_id must be positive integer"
 
     query_params = {
-    'domain': config['DOMAIN'],
-    'access_token': config['VK_ACCESS_TOKEN'],
-    'v': config['V'],
+    'domain': config.get('domain'),
+    'access_token': config.get('access_token'),
+    'v': config.get('v'),
     'user_id': user_id,
     'offset': offset,
     'count': count
