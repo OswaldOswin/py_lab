@@ -1,5 +1,6 @@
 import requests
 import datetime
+import time
 import plotly
 import plotly.plotly as py
 import plotly.graph_objs as go
@@ -15,20 +16,17 @@ user_id = int(input('Enter id: '))
 plotly.tools.set_credentials_file(username=config.get('plotly_username'), api_key=config.get('plotly_api_key'))
 
 
-def get(url, params={}, timeout=5, max_retries=5, backoff_factor=0.3):
-
-    for retry in range(max_retries):
+def get(url: str, params={}, timeout=5, max_retries=5, backoff_factor=0.3) -> dict:
+    for i in range(max_retries):
         try:
-            response = requests.get(url, params=params, timeout=timeout)
+            response = requests.get(url, params=params)
             return response
-        except requests.exceptions.RequestException:
-            if retry == max_retries - 1:
-                raise
-            backoff_value = backoff_factor * (2 ** retry)
-            time.sleep(backoff_value)
+        except requests.RequestException:
+            time.sleep(timeout)
+            timeout = backoff_factor * (2 ** i)
 
 
-def get_friends(user_id: int, fields: str) -> dict:
+def get_friends(user_id: int, fields = '') -> dict:
 
     assert isinstance(user_id, int), "user_id must be positive integer"
     assert isinstance(fields, str), "fields must be string"
@@ -43,7 +41,7 @@ def get_friends(user_id: int, fields: str) -> dict:
     }
 
     query = "{domain}/friends.get?access_token={access_token}&user_id={user_id}&fields={fields}&v={v}".format(**query_params)
-    response = requests.get(query)
+    response = get(query)
     return response.json()
 
 
@@ -56,25 +54,19 @@ def age_predict(user_id: str) -> int:
     dates = []
     ages = []
     data = get_friends(user_id, 'bdate')
-    friends = data['response']['items']
-    num = data['response']['count']
-    for i in range(num):
-        if friends[i].get('bdate'):
-            dates.append(friends[i]['bdate'])
+    for i in data['response']['items']:
+        if i.get('bdate'):
+            dates.append(i['bdate'])
     #учитываем только даты с годом
     new = []
     for elem in dates:
         if len(elem) in range(8, 11):
             new.append(elem)
-        dates = new
+    dates = new
     #считаем возраст друзей
     for elem in dates:
-        b = []
-        a = elem
-        b = a.split('.')
-        for i in range(3):
-            b[i] = int(b[i])
-        data = datetime.date(b[2], b[1], b[0])
+        a = list(map(int, elem.split('.')))
+        data = datetime.date(a[2], a[1], a[0])
         age = (datetime.date.today() - data) // 365
         ages.append(age.days)
     #считаем медиану
@@ -86,16 +78,16 @@ def age_predict(user_id: str) -> int:
             return int((ages[len(ages) // 2 - 1] + ages[len(ages) // 2]) / 2)
     else:
         return 0
-print(age_predict(116913967))
 
 
-def messages_get_history(user_id: int, offset=0, count=20) -> dict:
+def messages_get_history(user_id: int, offset=0, count=200) -> dict:
 
     assert isinstance(user_id, int), "user_id must be positive integer"
     assert user_id > 0, "user_id must be positive integer"
     assert isinstance(offset, int), "offset must be positive integer"
     assert offset >= 0, "user_id must be positive integer"
     assert count >= 0, "user_id must be positive integer"
+    max_count = 200
 
     query_params = {
     'domain': config.get('domain'),
@@ -103,64 +95,86 @@ def messages_get_history(user_id: int, offset=0, count=20) -> dict:
     'v': config.get('v'),
     'user_id': user_id,
     'offset': offset,
-    'count': count
+    'count': min(count, max_count)
     }
 
-    query = "{domain}/messages.getHistory?access_token={access_token}&user_id={user_id}&offset={offset}&v={v}".format(**query_params)
-    response = requests.get(query)
-    messages = response.json()
+    query = "{domain}/messages.getHistory?access_token={access_token}&user_id={user_id}&offset={offset}&count={count}&v={v}".format(**query_params)
+    response = get(query)
+    data = response.json()
+    count = data['response']['count']
+    messages = []
+    while count > 0:
+        query2 = "{domain}/messages.getHistory?access_token={access_token}&user_id={user_id}&offset={offset}&count={count}&v={v}".format(**query_params)
+        response2 = get(query2)
+        data2 = response2.json()
+        messages.extend(data2['response']['items'])
+        count -= min(count, max_count)
+        query_params['offset'] += 200
+        query_params['count'] = min(count, max_count)
+        time.sleep(0.3333333334)
     return messages
 
 
 def count_dates_from_messages(messages: dict) -> list:
-    messages = messages_get_history(user_id)
-    items = messages['response']['items']
     dates = []
-    for item in items:
-        dates.append(item['date'])
+    for message in messages:
+        dates.append(message['date'])
     for i in range(len(dates)):
         dates[i] = datetime.datetime.fromtimestamp(dates[i]).strftime('%Y-%m-%d')
     if dates:
         return dates
-    else:
-        return [0]
 
-def plotly_messages_freq(dates):
+
+def plotly_messages_freq(dates: list) -> None:
     a = Counter(dates)
     x = list(a.keys())
     y = list(a.values())
     data = [go.Scatter(x=x,y=y)]
     py.iplot(data)
-#plotly_messages_freq(count_dates_from_messages(messages_get_history(user_id)))
 
-def get_network(user_id=config.get('my_id'), as_edgelist=True):
-    id_list = get_friends(user_id)['response']['items']
-    edges = [(0,2),(0,1),(0,3),
-    (1,0),(1,2),(1,3),
-    (2,0),(2,1),(2,3),(2,4),
-    (3,0),(3,1),(3,2),
-    (4,5),(4,6),
-    (5,4),(5,6),
-    (6,4),(6,5)]
+num = get_friends(user_id)['response']['count']
+def get_network(user_id, as_edgelist=True):
+    edges = []
+    ids = []
+    for i in range(num):
+        print(get_friends(user_id)['response']['items'][i]['id'])
+    for i in range(len(ids)):
+        time.sleep(0.3333333334)
+        temp2 = get_friends(user_id)['response']['items']
+        ids2 = [get_friends(ids[i])['response']['items'][l]['id'] for l in range(num)]
+        for j in range(len(ids2)):
+            if ids[i] == ids2[j]:
+                edges.append((i, j))
+        return edges
 
-    g = Graph(vertex_attrs={"label":vertices},
-    edges=edges, directed=False)
 
-    N = len(vertices)
-    visual_style = {}
-    visual_style["layout"] = g.layout_fruchterman_reingold(
-    maxiter=1000,
-    area=N**3,
-    repulserad=N**3)
+def plot_graph(user_id):
+    surnames = []
+    for i in range(num):
+        surnames.append(get_friends(user_id, 'last_name')['response']['items'])
+        time.sleep(0.4)
+    edges = get_network(user_id)
+    g = Graph(vertex_attrs={"shape": "circle",
+                            "label": vertices,
+                            "size": 10},
+              edges=edges, directed=False)
 
-    plot(g, **visual_style)
+    n = len(vertices)
+    visual_style = {
+        "vertex_size": 20,
+        "edge_color": "gray",
+        "layout": g.layout_fruchterman_reingold(
+            maxiter=100000,
+            area=n ** 2,
+            repulserad=n ** 2)
+    }
 
-    g.simplify(multiple=True, loops=True)
-
+    clusters = g.community_multilevel()
     pal = igraph.drawing.colors.ClusterColoringPalette(len(clusters))
     g.vs['color'] = pal.get_many(clusters.membership)
+    plot(g, **visual_style)
 
 
-def plot_graph(graph):
-    # PUT YOUR CODE HERE
-    pass
+if __name__ == '__main__':
+    print('Примерный возраст:', age_predict(user_id))
+    plot_graph(141948816)
