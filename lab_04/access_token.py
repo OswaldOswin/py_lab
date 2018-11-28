@@ -6,7 +6,6 @@ def get_access_token(client_id, scope):
     assert isinstance(client_id, int), 'clinet_id must be positive integer'
     assert isinstance(scope, str), 'scope must be string'
     assert client_id > 0, 'clinet_id must be positive integer'
-    client_id = 6748253
     url = """\
     https://oauth.vk.com/authorize?client_id={client_id}&\
     redirect_uri=https://oauth.vk.com/blank.hmtl&\
