@@ -37,9 +37,9 @@ def age_predict(user_id: int) -> Optional[float]:
         if len(ages) % 2 == 1:
             return ages[len(ages) // 2]
         else:
-            return int((ages[len(ages) // 2 - 1] + ages[len(ages) // 2]) / 2)
+            return (ages[len(ages) // 2 - 1] + ages[len(ages) // 2]) / 2
     else:
-        return 0
+        return None
 
 if __name__ == '__main__':
     print('Age:', age_predict(user_id))
