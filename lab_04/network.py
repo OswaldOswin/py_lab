@@ -3,8 +3,7 @@ import time
 import igraph
 
 
-user_id = int(input('Enter id: '))
-num = get_friends(user_id)['response']['count']
+
 
 def get_network(user_id: int, as_edgelist) -> list:
     users_ids = get_friends(user_id)['response']['items']
@@ -39,6 +38,7 @@ def plot_graph(user_id: int) -> None:
 
     n = len(vertices)
     visual_style = {
+        "vertex_label_dist": 1.6,
         "vertex_size": 20,
         "edge_color": "gray",
         "layout": g.layout_fruchterman_reingold(
@@ -47,8 +47,12 @@ def plot_graph(user_id: int) -> None:
             repulserad=n ** 2)
     }
     g.simplify(multiple=True, loops=True)
-    communities = g.community_edge_betweenness(directed=False)
-
+    clusters = g.community_multilevel()
+    pal = igraph.drawing.colors.ClusterColoringPalette(len(clusters))
+    g.vs['color'] = pal.get_many(clusters.membership)
+    igraph.plot(g, **visual_style)
 
 if __name__ == '__main__':
+    user_id = int(input('Enter id: '))
+    num = get_friends(user_id)['response']['count']
     plot_graph(user_id)
