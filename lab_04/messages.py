@@ -18,13 +18,11 @@ plotly.tools.set_credentials_file(
     api_key=config['plotly_api_key']
 )
 
-user_id = int(input('Enter id: '))
-
 def fromtimestamp(ts: int) -> datetime.date:
     return datetime.datetime.fromtimestamp(ts).date()
 
 
-def count_dates_from_messages(messages: dict) -> list:
+def count_dates_from_messages(messages: List[Message]) -> list:
     dates = []
     for message in messages:
         dates.append(message['date'])
@@ -42,5 +40,5 @@ def plotly_messages_freq(dates: list) -> None:
     py.iplot(data)
 
 if __name__ == '__main__':
-    a = count_dates_from_messages(messages_get_history(user_id))
-    plotly_messages_freq(a)
+    plotly_messages_freq(count_dates_from_messages(messages_get_history(user_id)))
+    user_id = int(input('Enter id: '))
