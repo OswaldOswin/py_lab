@@ -1,4 +1,9 @@
-import datetime
-day_number = str(datetime.datetime.today().weekday() + 1)
-print(day_number)
-print(type(day_number))
+paras = {1: '8:20-9:50',
+2: '10:00-11:30',
+3: '11:40-13:10',
+4: '13:30-15:00',
+5: '15:20-16:50',
+6: '17:00-18:30',
+7: '18:40-20:10'}
+para_number = 3
+print(paras[para_number])

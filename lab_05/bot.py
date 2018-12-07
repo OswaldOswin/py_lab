@@ -17,24 +17,20 @@ def get_page(group, week=''):
         group=group)
     response = requests.get(url)
     web_page = response.text
+    print(url)
     return web_page
 
 
 def parse_schedule_for_a_day(web_page, day_number: str):
     soup = BeautifulSoup(web_page, "html5lib")
-
-    # Получаем таблицу с расписанием на понедельник
     schedule_table = soup.find("table", attrs={"id": day_number + "day"})
 
-    # Время проведения занятий
     times_list = schedule_table.find_all("td", attrs={"class": "time"})
     times_list = [time.span.text for time in times_list]
 
-    # Место проведения занятий
     locations_list = schedule_table.find_all("td", attrs={"class": "room"})
-    locations_list = [room.span.text + ', №:' + room.dd.text for room in locations_list]
+    locations_list = [room.span.text + ", " + room.dd.text for room in locations_list]
 
-    # Название дисциплин и имена преподавателей
     lessons_list = schedule_table.find_all("td", attrs={"class": "lesson"})
     lessons_list = [lesson.text.split('\n\n') for lesson in lessons_list]
     lessons_list = [', '.join([info for info in lesson_info if info]) for lesson_info in lessons_list]
@@ -44,13 +40,14 @@ def parse_schedule_for_a_day(web_page, day_number: str):
 
 def parse_lesson(web_page, day_number: str, para_number: int):
     soup = BeautifulSoup(web_page, "html5lib")
-    schedule_table = soup.find("table", attrs={"id", day_number + "day"})
+
+    schedule_table = soup.find("table", attrs={"id": day_number + "day"})
 
     times_list = schedule_table.find_all("td", attrs={"class": "time"})
     times_list = [time.span.text for time in times_list]
 
     locations_list = schedule_table.find_all("td", attrs={"class": "room"})
-    locations_list = [room.span.text + ', №:' + room.dd.text for room in locations_list]
+    locations_list = [room.span.text + ", " + room.dd.text for room in locations_list]
 
     lessons_list = schedule_table.find_all("td", attrs={"class": "lesson"})
     lessons_list = [lesson.text.split('\n\n') for lesson in lessons_list]
@@ -65,7 +62,7 @@ def parse_lesson(web_page, day_number: str, para_number: int):
     7: '18:40-20:10'}
 
     for i in range(len(times_list)):
-        if times_list[i] == paras['para_number']:
+        if times_list[i] == paras[para_number]:
             return times_list[i], locations_list[i], lessons_list[i]
 
 
@@ -73,7 +70,7 @@ def get_resp_for_a_day(web_page, day_number: str):
     times_lst, locations_lst, lessons_lst = parse_schedule_for_a_day(web_page, day_number)
     resp = ''
     for time, location, lesson in zip(times_lst, locations_lst, lessons_lst):
-        resp += '<b>{}</b>, {}, {}\n'.format(time, location, lesson)
+        resp += '<b>{}</b>,  {}, {}\n'.format(time, location, lesson)
     return resp
 
 
@@ -113,17 +110,17 @@ def get_schedule(message):
 
 @bot.message_handler(commands=['near', 'next'])
 def get_near_lesson(message):
-    group = message.text.split()
+    group = message.text.split()[1]
     week = datetime.date.today().isocalendar()[1]
     if week % 2 == 1:
-        week = '2'
+        week = 2
     else:
-        week == '1'
+        week == 1
     web_page = get_page(group, week)
     day_number = str(datetime.datetime.today().weekday() + 1)
     time = datetime.datetime.now().time()
     if time > datetime.time(18, 40, 0):
-        day_number += 1
+        day_number = str(int(day_number) + 1)
         para_number = 1
     elif time > datetime.time(17, 00, 0):
         para_number = 7
@@ -137,12 +134,14 @@ def get_near_lesson(message):
         para_number = 3
     elif time > datetime.time(8, 20, 0):
         para_number = 2
+    print(web_page)
+    print(group, week, para_number, day_number)
     while parse_lesson(web_page, day_number, para_number) is None:
         if para_number < 7:
             para_number += 1
         else:
             para_number = 1
-            day_number += 1
+            day_number = str(int(day_number) + 1)
     bot.send_message(message.chat.id, get_resp_for_a_lesson(web_page, day_number, para_number), parse_mode='HTML')
 
 
