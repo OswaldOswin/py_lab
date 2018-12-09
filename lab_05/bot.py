@@ -7,6 +7,13 @@ from bs4 import BeautifulSoup
 
 bot = telebot.TeleBot(config.token)
 
+@bot.message_handler(commands=['start'])
+def greeting(message):
+    bot.send_message(message.chat.id, 'Привет! Я бот Спи Сладко. Я могу выполнять следующие команды: \n \
+    /day group week, где day - день недели, group - номер группы, week - 1 четная, 2 нечетная, пусто для вывода обеих недель \n \
+    /near group, которая выводит следующую пару для группы \n \
+    /tommorow group, которая выводит расписание на завтра для группы \n \
+    /all group, которая выводит все расписание для группы')
 
 def get_page(group, week=''):
     if week:
@@ -173,16 +180,18 @@ def get_tommorow(message):
     web_page = get_page(group, week)
 
     day_number = str(datetime.datetime.today().weekday() + 1)
-    if day_number == '7' and week == 1:
+    if int(day_number) > 5 and week == 1:
         day_number = '1'
         week = 2
         web_page = get_page(group, week)
-    elif day_number == '7' and week == 2:
+    elif int(day_number) > 5 and week == 2:
         day_number = '1'
         week = 1
         web_page = get_page(group, week)
-
-    bot.send_message(message.chat.id, get_resp_for_a_day(web_page, day_number), parse_mode='HTML')
+    if parse_schedule_for_a_day(web_page, day_number) is None:
+        bot.send_message(message.chat.id, "Завтра нет пар, отдыхай")
+    else:
+        bot.send_message(message.chat.id, get_resp_for_a_day(web_page, day_number), parse_mode='HTML')
 
 
 @bot.message_handler(commands=['all'])
