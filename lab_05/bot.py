@@ -61,7 +61,7 @@ def parse_lesson(web_page, day_number: str, para_number: int):
     lessons_list = [lesson.text.split('\n\n') for lesson in lessons_list]
     lessons_list = [', '.join([info for info in lesson_info if info]) for lesson_info in lessons_list]
 
-    paras = {1: '8:20-9:50',
+    paras = {1: '08:20-09:50',
     2: '10:00-11:30',
     3: '11:40-13:10',
     4: '13:30-15:00',
@@ -120,8 +120,12 @@ def get_schedule(message):
 def get_near_lesson(message):
     group = message.text.split()[1]
     time = datetime.datetime.now().time()
+
+    day_number = str(datetime.datetime.today().weekday() + 1)
+
     if time > datetime.time(18, 40, 0):
         para_number = 1
+        day_number = str(int(day_number) + 1)
     elif time > datetime.time(17, 00, 0):
         para_number = 7
     elif time > datetime.time(15, 20, 0):
@@ -139,23 +143,13 @@ def get_near_lesson(message):
     if now_week % 2 == 1:
         week = 2
     else:
-        week == 1
-    web_page = get_page(group, week)
-
-    day_number = str(datetime.datetime.today().weekday() + 1)
-    if day_number == '7' and week == 1:
-        day_number = '1'
-        week = 2
-        web_page = get_page(group, week)
-    elif day_number == '7' and week == 2:
-        day_number = '1'
         week = 1
-        web_page = get_page(group, week)
+    web_page = get_page(group, week)
 
     while parse_lesson(web_page, day_number, para_number) is None:
         if para_number > 7:
             para_number = 1
-            if day_number == '7' or day_number == '6':
+            if int(day_number) > 6:
                 day_number = '1'
                 if week == 1:
                     week = 2
@@ -176,10 +170,10 @@ def get_tommorow(message):
     if now_week % 2 == 1:
         week = 2
     else:
-        week == 1
+        week = 1
     web_page = get_page(group, week)
 
-    day_number = str(datetime.datetime.today().weekday() + 1)
+    day_number = str(datetime.datetime.today().weekday() + 2)
     if int(day_number) > 5 and week == 1:
         day_number = '1'
         week = 2
