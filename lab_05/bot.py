@@ -68,7 +68,7 @@ def parse_lesson(web_page, day_number: str, para_number: int):
     5: '15:20-16:50',
     6: '17:00-18:30',
     7: '18:40-20:10'}
-
+    print(times_list, locations_list, lessons_list)
     for i in range(len(times_list)):
         if times_list[i] == paras[para_number]:
             return times_list[i], locations_list[i], lessons_list[i]
@@ -84,8 +84,7 @@ def get_resp_for_a_day(web_page, day_number: str):
 
 def get_resp_for_a_lesson(web_page, day_number: str, para_number: int):
     time, location, lesson = parse_lesson(web_page, day_number, para_number)
-    resp = ''
-    resp += '<b>{}</b>, {}, {}'.format(time, location, lesson)
+    resp = '<b>{}</b>, {}, {}'.format(time, location, lesson)
     return resp
 
 
@@ -147,7 +146,7 @@ def get_near_lesson(message):
     web_page = get_page(group, week)
 
     while parse_lesson(web_page, day_number, para_number) is None:
-        if para_number > 7:
+        if para_number == 8:
             para_number = 1
             if int(day_number) > 6:
                 day_number = '1'
@@ -159,6 +158,7 @@ def get_near_lesson(message):
                 day_number = str(int(day_number) + 1)
         else:
             para_number += 1
+    
     bot.send_message(message.chat.id, get_resp_for_a_lesson(web_page, day_number, para_number), parse_mode='HTML')
 
 
