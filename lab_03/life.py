@@ -26,9 +26,9 @@ class GameOfLife:
     def run(self):
         pygame.init()
         clock = pygame.time.Clock()
-        self.clist = self.cell_list()
         pygame.display.set_caption('Game of Life')
         self.screen.fill(pygame.Color('white'))
+        self.clist = self.cell_list()
         running = True
         while running:
             for event in pygame.event.get():
@@ -42,7 +42,6 @@ class GameOfLife:
         pygame.quit()
 
     def cell_list(self, randomize=True) -> List:
-        # создание списка клеток
         self.clist = []
         self.clist = [[0] * self.cell_width for i in range(self.cell_height)]
         if randomize:
@@ -51,7 +50,7 @@ class GameOfLife:
                     self.clist[i][j] = random.randint(0, 1)
         return self.clist
 
-    def draw_cell_list(self, clist):
+    def draw_cell_list(self, clist: List):
          for i in range(self.cell_height):
             for j in range(self.cell_width):
                 x = j * self.cell_size + 1
@@ -63,8 +62,7 @@ class GameOfLife:
                 else:
                     pygame.draw.rect(self.screen, pygame.Color('white'), (x, y, a, b))
 
-    def get_neighbours(self, cell):
-        # список соседей для указанной ячейки
+    def get_neighbours(self, cell: tuple) -> List:
         neighbours = []
         x, y = cell
         for i in range(x - 1, x + 2):
@@ -74,7 +72,6 @@ class GameOfLife:
         return neighbours
 
     def update_cell_list(self, cell_list: List) -> List:
-        # один шаг игры
         new_clist = copy.deepcopy(self.clist)
         for i in range(self.cell_height):
             for j in range(self.cell_width):

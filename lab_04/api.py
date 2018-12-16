@@ -45,7 +45,7 @@ def messages_get_history(user_id: int, offset=0, count=200) -> dict:
 
     query_params = {
     'domain': config.get('domain'),
-    'access_token': config.get('access_token'),
+    'access_token': 'd1cbf69f51b92895d80cb847c84e2b3283e351921273731104956e556b3002afabc8ff73b9ef672227089',
     'v': config.get('v'),
     'user_id': user_id,
     'offset': offset,
@@ -55,6 +55,7 @@ def messages_get_history(user_id: int, offset=0, count=200) -> dict:
     query = "{domain}/messages.getHistory?access_token={access_token}&user_id={user_id}&offset={offset}&count={count}&v={v}".format(**query_params)
     response = get(query)
     data = response.json()
+    print(data)
     count = data['response']['count']
     messages = []
 
@@ -68,3 +69,5 @@ def messages_get_history(user_id: int, offset=0, count=200) -> dict:
         query_params['count'] = min(count, max_count)
         time.sleep(0.3333333334)
     return messages
+
+print(messages_get_history(456246064))
