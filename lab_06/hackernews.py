@@ -16,13 +16,31 @@ def news_list():
 
 @route("/add_label/")
 def add_label():
-    # PUT YOUR CODE HERE
+    s = session()
+    print(request)
+    label = request.query.label
+    row_id = request.query.id
+    row = s.query(News).filter(News.id == row_id).one()
+    row.label = label
+    s.commit()
     redirect("/news")
 
 
 @route("/update")
 def update_news():
-    # PUT YOUR CODE HERE
+    s = session()
+    current_news = get_news()
+    existing_news = s.query(News).options(load_only("title", "author")).all()
+    existing_t_a = [(news.title, news.author) for news in existing_news]
+    for news in current_news:
+        if (news['title'], news['author']) not in existing_t_a:
+            news_add = News(title=news['title'],
+                            author=news['author'],
+                            url=news['url'],
+                            comments=news['comments'],
+                            points=news['points'])
+            s.add(news_add)
+    s.commit()
     redirect("/news")
 
 
@@ -33,4 +51,3 @@ def classify_news():
 
 if __name__ == "__main__":
     run(host="localhost", port=8080)
-
