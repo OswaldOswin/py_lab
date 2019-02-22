@@ -1,11 +1,9 @@
-from bottle import (
-    route, run, template, request, redirect
-)
+from bottle import route, run, template, redirect,request
 
 from scraputils import get_news
 from db import News, session
 from bayes import NaiveBayesClassifier
-
+from sqlalchemy.orm import load_only
 
 @route("/news")
 def news_list():
@@ -46,8 +44,26 @@ def update_news():
 
 @route("/classify")
 def classify_news():
-    pass
+    s = session()
+    recently_marked_news = s.query(News).filter(News.title not in x_train and News.label != None).all()
+    x_extra_train = [row.title for row in recently_marked_news]
+    y_extra_train = [row.label for row in recently_marked_news]
+    classifier.fit(x_extra_train, y_extra_train)
+
+    blank_rows = s.query(News).filter(News.label == None).all()
+    x = [row.title for row in blank_rows]
+    labels = classifier.predict(x)
+    good = [blank_rows[i] for i in range(len(blank_rows)) if labels[i] == 'good']
+    maybe = [blank_rows[i] for i in range(len(blank_rows)) if labels[i] == 'maybe']
+    never = [blank_rows[i] for i in range(len(blank_rows)) if labels[i] == 'never']
+    return template('recommended', {'good': good,'never': never,'maybe':maybe})
 
 
 if __name__ == "__main__":
+    s = session()
+    classifier = NaiveBayesClassifier()
+    marked_news = s.query(News).filter(News.label != None).all()
+    x_train = [row.title for row in marked_news]
+    y_train = [row.label for row in marked_news]
+    classifier.fit(x_train, y_train)
     run(host="localhost", port=8080)

@@ -11,14 +11,17 @@ def extract_news(parser)->list:
     for news in news_rows:
         first_td = news[0].findAll('td')[2]
         second_td = news[1].findAll('td')[1]
+
         str_comments = second_td.findAll('a')[-1].text
         if str_comments == 'discuss':
             comments = 0
-        elif str_comments == "hide":
+        elif str_comments[0] == "h":
             comments = 0
         else:
             comments = int(str_comments[0])
+
         points = int(second_td.span.text[0])
+
         link = str(first_td.a)[27:]
         href_end = link.find('"')
         href = link[:href_end]
