@@ -70,5 +70,5 @@ if __name__ == '__main__':
     q = Queue()
     big_data = [6, 2, 3, 4, 5, 6, 2, 1, 3, 2, 1, 2, 3, 1, 3, 2, 1, 3, 1, 2]
     pool = ProcessPool(min_workers=3, max_workers=13, mem_usage=100)
-    check = pool.check(heavy_computation, big_data[0])
+    check = pool.check(heavy_computation, max(big_data))
     result = pool.map(heavy_computation, big_data)
