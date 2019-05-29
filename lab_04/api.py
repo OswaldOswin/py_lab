@@ -52,6 +52,6 @@ def messages_get_history(user_id: int, offset=0, count=200) -> dict:
     'count': min(count, max_count)
     }
 
-    =c m58t2
+
 
 print(messages_get_history(456246064))

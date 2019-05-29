@@ -11,7 +11,11 @@ def get_network(user_id: int, as_edgelist) -> list:
     matrix = [[0] * num for i in range(num)]
 
     for user1 in range(num):
-        friends = get_friends(users_ids[user1])['response']['items']
+        try:
+            friends = get_friends(users_ids[user1])['response']['items']
+        except KeyError:
+            pass
+
         for user2 in range(user1 + 1, num):
             if users_ids[user2] in friends:
                 if as_edgelist:
