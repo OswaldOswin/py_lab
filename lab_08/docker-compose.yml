@@ -16,6 +16,8 @@ services:
         command: bash -c "sleep 5 && python manage.py makemigrations && python manage.py migrate && python manage.py collectstatic --noinput && uwsgi --ini /usr/local/etc/elevennote.ini"
         depends_on:
             - db
+        links:
+            - db:db
         volumes:
             - ./src:/src
             - ./deploy/uwsgi:/usr/local/etc/
